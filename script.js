@@ -50,7 +50,7 @@ function chooseAvatar(a,el){avatar=a;document.querySelectorAll('.avatar').forEac
 function enterLobby(){let n=$('playerName').value.trim();if(!n){$('welcomeError').textContent='Nama pemain harus diisi terlebih dahulu.';return}player=n;$('helloName').textContent=player;$('menuPlayer').textContent=player;$('menuAvatar').textContent=avatar;startBgm();showScreen('home')}
 function changePlayer(){$('playerName').value=player;showScreen('welcome')}
 function startGame(){questions=[...BANK[S.level]].sort(()=>Math.random()-.5).slice(0,10);qIndex=0;score=0;lives=3;$('playingAs').textContent=player+' '+avatar;showScreen('game');renderQuestion()}
-function renderQuestion(){choice=null;locked=false;let q=questions[qIndex];$('qTag').textContent=`SOAL ${qIndex+1} / 15 • ${LV[S.level]}`;$('qTitle').textContent='Tantangan SPLDV';$('score').textContent=score;$('life').textContent=lives;$('progress').style.width=(qIndex/10*150)+'%';
+function renderQuestion(){choice=null;locked=false;let q=questions[qIndex];$('qTag').textContent=`SOAL ${qIndex+1} / 15 • ${LV[S.level]}`;$('qTitle').textContent='Tantangan SPLDV';$('score').textContent=score;$('life').textContent=lives;$('progress').style.width=(qIndex/15*100)+'%';
 $('questionArea').innerHTML=`<div class="question-box"><p style="color:#d1e5dc;line-height:1.7">${q.context}</p><div class="equations">${q.eq.join('<br>')}</div><h3>${q.question}</h3></div><div class="answers">${q.opts.map((o,i)=>`<button class="answer" id="opt${i}" onclick="pick(${i})">${String.fromCharCode(65+i)}. ${o}</button>`).join('')}</div>`;
 $('feedback').textContent='Pilih jawaban yang menurutmu benar.';$('checkBtn').classList.remove('hidden');$('nextBtn').classList.add('hidden')}
 function pick(i){if(locked)return;choice=i;document.querySelectorAll('.answer').forEach((b,n)=>b.classList.toggle('selected',n===i));$('feedback').textContent='Jawaban dipilih. Tekan PERIKSA JAWABAN.'}
@@ -59,7 +59,7 @@ if(ok){score+=10;$('feedback').innerHTML='<b style="color:#8df0ae">BENAR! +10 PO
 sfx(ok?'good':'bad');burst(ok);
 document.querySelectorAll('.answer').forEach((b,i)=>{b.disabled=true;if(i===q.ans)b.classList.add('good');else if(i===choice)b.classList.add('bad')});$('score').textContent=score;$('life').textContent=lives;$('checkBtn').classList.add('hidden');$('nextBtn').classList.remove('hidden');$('nextBtn').textContent=(qIndex===9||lives===0)?'LIHAT HASIL':'SOAL BERIKUTNYA →'}
 function nextQuestion(){if(qIndex===9||lives===0){finish();return}qIndex++;renderQuestion()}
-function finish(){showScreen('result');let complete=lives>0&&qIndex===9,high=score>=120;$('resultIcon').textContent=high?'🏆':(complete?'🌟':'🌱');$('resultTitle').textContent=complete?'HEBAT, MISI SELESAI!':'PERMAINAN BERAKHIR';
+function finish(){showScreen('result');let complete=lives>0&&qIndex===14,high=score>=100;$('resultIcon').textContent=high?'🏆':(complete?'🌟':'🌱');$('resultTitle').textContent=complete?'HEBAT, MISI SELESAI!':'PERMAINAN BERAKHIR';
 $('resultDesc').textContent=complete?`Kerja bagus, ${player}! Kamu menyelesaikan 15 soal.`:`${player}, permainan berakhir karena kesempatan habis. Pelajari pembahasan dan coba lagi.`;
 $('resultScore').textContent=`${avatar} ${player.toUpperCase()} • SKOR ${score} / 150`;
 if(high){$('resultMsg').textContent=PRAISE[Math.floor(Math.random()*PRAISE.length)];burst(true)}

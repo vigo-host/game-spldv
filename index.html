@@ -28,7 +28,7 @@
 <section class="screen" id="menu"><div class="panel">
  <div class="eyebrow">MAIN MENU</div><h2>Menu Petualangan</h2><p class="sub">Pemain: <b id="menuPlayer"></b> <span id="menuAvatar"></span></p>
  <div class="menu-grid">
-  <button class="menu-btn" onclick="startGame()"><span>🎮</span>MULAI GAME<small>10 soal SPLDV acak • Level <b id="menuLevel"></b></small></button>
+  <button class="menu-btn" onclick="startGame()"><span>🎮</span>MULAI GAME<small>15 soal SPLDV acak • Level <b id="menuLevel"></b></small></button>
   <button class="menu-btn" onclick="openModal('how')"><span>📘</span>CARA BERMAIN<small>Pelajari aturan permainan</small></button>
   <button class="menu-btn" onclick="openDeveloper()"><span>👥</span>TENTANG DEVELOPER<small>Lihat kelompok pembuat game</small></button>
   <button class="menu-btn" onclick="openModal('about')"><span>🌎</span>TENTANG GAME<small>Informasi projek dan materi</small></button>
@@ -46,7 +46,7 @@
 </div>
 
 <div class="modal-bg" id="how"><div class="modal"><button class="close" onclick="closeModal('how')">✕</button><h2>📘 Tata Cara Bermain</h2>
-<ol style="line-height:1.9;color:#d6e8df"><li>Masukkan nama pemain dan pilih avatar sebelum masuk lobby.</li><li>Tekan Mulai Game untuk memainkan 10 soal SPLDV.</li><li>Pilih level (Mudah, Medium, atau Susah) di Pengaturan. Setiap level punya 35 soal (10 soal utama dan 25 soal cadangan), dan setiap permainan mengambil 10 soal acak dari level yang dipilih.</li><li>Pilih satu jawaban lalu tekan Periksa Jawaban.</li><li>Jawaban benar mendapat 10 poin dan bunyi “cling”. Jawaban salah mengurangi satu nyawa dan berbunyi “tetot”.</li><li>Pemain mendapat 3 nyawa. Pembahasan ditampilkan setelah setiap jawaban.</li><li>Setelah 10 soal selesai atau nyawa habis, hasil permainan akan ditampilkan.</li></ol><p style="color:var(--lime);font-weight:900">Setiap permainan dapat memiliki kombinasi soal yang berbeda!</p></div></div>
+<ol style="line-height:1.9;color:#d6e8df"><li>Masukkan nama pemain dan pilih avatar sebelum masuk lobby.</li><li>Tekan Mulai Game untuk memainkan 15 soal SPLDV.</li><li>Pilih level (Mudah, Medium, atau Susah) di Pengaturan. Setiap level punya 35 soal (15 soal utama dan 25 soal cadangan), dan setiap permainan mengambil 10 soal acak dari level yang dipilih.</li><li>Pilih satu jawaban lalu tekan Periksa Jawaban.</li><li>Jawaban benar mendapat 10 poin dan bunyi “cling”. Jawaban salah mengurangi satu nyawa dan berbunyi “tetot”.</li><li>Pemain mendapat 3 nyawa. Pembahasan ditampilkan setelah setiap jawaban.</li><li>Setelah 15 soal selesai atau nyawa habis, hasil permainan akan ditampilkan.</li></ol><p style="color:var(--lime);font-weight:900">Setiap permainan dapat memiliki kombinasi soal yang berbeda!</p></div></div>
 <div class="modal-bg" id="team"><div class="modal"><button class="close" onclick="closeModal('team')">✕</button><h2>👥 Tim Developer</h2><p class="sub">Kelompok pembuat game EcoQuest.</p><div class="devcard" id="devCard"></div></div></div>
 <div class="modal-bg" id="settings"><div class="modal"><button class="close" onclick="closeModal('settings')">✕</button><h2>⚙️ Pengaturan</h2>
 <div class="set-row"><span>🎵 Musik latar</span><button class="switch" id="swMusic" onclick="setOpt('music')" aria-label="Musik latar"></button></div>

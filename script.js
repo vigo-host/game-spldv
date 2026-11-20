@@ -5,7 +5,7 @@ const DEV = {group:'Kelompok ... (isi nama kelompok)', members:['Anggota 1','Ang
    good = suara jawaban BENAR (cling) | bad = suara jawaban SALAH (tetot)
    bgm  = 3 musik latar, diputar bergantian (1 -> 2 -> 3 -> ulang)
    Jika nama/ekstensi file kamu berbeda, ubah tulisan di dalam tanda kutip. */
-const AUDIO_FILES = {good:'audio/cling.mp3', bad:'audio/tetot.mp3', bgm:['audio/background1.mp3','audio/background2.mp3','audio/background3.mp3']};
+const AUDIO_FILES = {good:'cling.mp3', bad:'tetot.mp3', bgm:['background1.mp3','background2.mp3','background3.mp3']};
 const PRAISE = ['Luar biasa! Kamu benar-benar Penjaga Bumi sejati! 🌍🏆','Keren banget! Kemampuan SPLDV-mu sangat mantap! 🌟','Hebat! Bumi aman karena ada pahlawan sepertimu! 💚','Sempurna! Pertahankan semangat belajarmu! 🎉','Mantap! Kamu layak jadi duta lingkungan sekaligus jagoan matematika! 🌱'];
 const MOTIV = ['Jangan menyerah! Setiap kesalahan adalah langkah menuju paham. 💪','Bumi saja butuh waktu untuk pulih, kamu pun boleh belajar pelan-pelan. 🌱','Coba baca pembahasan lagi, lalu main sekali lagi. Kamu pasti bisa! ✨','Pahlawan bumi tidak lahir instan. Teruslah berlatih! 🌍','Skor hanya angka. Yang penting kamu mau terus mencoba! 🔥','Satu langkah kecil hari ini, lompatan besar esok hari. Semangat! 🚀','Eliminasi dan substitusi akan terasa mudah kalau sering dilatih. 📘','Kegagalan itu bibit yang akan tumbuh jadi keberhasilan. 🌿','Percayalah pada dirimu, kamu lebih mampu dari yang kamu kira! 💚','Istirahat sebentar, tarik napas, lalu kita selamatkan bumi lagi! 🌤️'];
 const avatars=['🦊','🐼','🐸','🐯','🐧','🐱','🐻','🦁'];

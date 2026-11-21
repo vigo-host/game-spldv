@@ -26,7 +26,7 @@ function setTheme(t){S.theme=t;saveS();applyS()}
 /* ---- audio ---- */
 const SFX={};['good','bad'].forEach(k=>{const a=new Audio(AUDIO_FILES[k]);a.preload='auto';a.onerror=()=>{a.broken=true;console.warn('File audio tidak ditemukan: '+AUDIO_FILES[k])};SFX[k]=a});
 let bgmI=S.bgm==='auto'?Math.floor(Math.random()*AUDIO_FILES.bgm.length):+S.bgm-1;
-const BGM=AUDIO_FILES.bgm.map((f,i)=>{const a=new Audio(f);a.preload='auto';a.volume=.25;
+const BGM=AUDIO_FILES.bgm.map((f,i)=>{const a=new Audio(f);a.preload='auto';a.volume=.7;
  a.onerror=()=>{a.broken=true;console.warn('File audio tidak ditemukan: '+f);if(S.music&&bgmI===i)startBgm()};
  a.onended=()=>{if(S.bgm==='auto')bgmI=(i+1)%BGM.length;a.currentTime=0;startBgm()};return a});
 function curBgm(){if(S.bgm!=='auto'){const a=BGM[+S.bgm-1];return a&&!a.broken?a:null}

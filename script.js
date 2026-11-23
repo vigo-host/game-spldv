@@ -183,7 +183,7 @@ function speak(t,w){speaking=false;try{if(!S.voice||!window.speechSynthesis)retu
 function say(who,t,d){bub={who,t:d||3.5,text:t};speak(t,who)}
 /* ---- alur game ---- */
 function startGame(){$('chList').innerHTML=CH.map((c,i)=>`<button class="menu-btn" ${i>prog?'disabled':''} onclick="startChapter(${i})"><span>${['🏘️','♻️','🌍'][i]}</span>${c.n}<small>${i>prog?'🔒 Selesaikan chapter sebelumnya terlebih dahulu':c.d}</small></button>`).join('');showScreen('chapters')}
-function startChapter(i){ac();C=i;steps=CH[i].steps;si=0;storyHistory=[];dialogueQueue=[];pose='walk';score=0;streak=0;firstOk=0;parts=[];banner=null;qn=0;qt=steps.filter(s=>typeof s!=='string').length;scene='home';bub=null;ox=0;
+function startChapter(i){document.body.classList.remove('ending');ac();C=i;steps=CH[i].steps;si=0;storyHistory=[];dialogueQueue=[];pose='walk';score=0;streak=0;firstOk=0;parts=[];banner=null;qn=0;qt=steps.filter(s=>typeof s!=='string').length;scene='home';bub=null;ox=0;
 $('actionCaption').textContent='Mereka bersiap memulai perjalanan.';$('playingAs').textContent=player+' '+avatar;$('qTitle').textContent=CH[i].n;$('score').textContent=0;$('fade').classList.remove('on');showScreen('game');next()}
 function showStory(text,who='narrator',sceneKey=scene,action='walk'){
  txt=text;typed=0;wait=0;mode='story';pose=action;poseUntil=performance.now()+3600;lastDialogue={text,who,scene:sceneKey,action};
@@ -224,15 +224,17 @@ $('feedback').innerHTML=`<b style="color:#ffb3a8">BELUM TEPAT</b><br><b style="c
 $('score').textContent=score}
 function endCh(){mode='end';stopSpeech();const last=C===CH.length-1,tot=qt*10,pct=score/tot,st=pct>=.85?3:pct>=.6?2:1;
 if(C+1>prog&&!last){prog=C+1;try{localStorage.ecoProg=prog}catch(e){}}
-const M=pct>=.85?['Luar biasa! Kamu benar-benar Penjaga Bumi sejati!','Kakek bangga sekali padamu. Pertahankan semangatmu, Nak!']:pct>=.6?['Bagus sekali! Sedikit lagi sempurna. Ulangi chapter ini untuk meraih tiga bintang!','Kamu sudah paham banyak hal. Teliti lagi di bagian hitungan ya.']:pct>=.35?['Tidak apa-apa, Nak. Setiap kesalahan adalah langkah menuju paham. Yuk coba lagi!','Perhatikan ceritanya baik-baik, petunjuk jawabannya ada di sana.']:['Jangan menyerah! Bumi saja butuh waktu untuk pulih, kamu pun boleh belajar pelan-pelan.','Kakek percaya kamu bisa. Ulangi chapter ini dan kita jalan bersama lagi!'];
-$('ft').innerHTML=`<div class="stars">${[0,1,2].map(i=>`<span style="animation-delay:${4.5+i*.5}s" class="${i<st?'on':''}">★</span>`).join('')}</div><h2>${CH[C].n} selesai!</h2><p class="sc">Skor ${score} / ${tot}</p><p>Benar di percobaan pertama: ${firstOk} dari ${qt}</p><p class="kk">🧓 Kakek: "${rnd(M)}"</p>`;
-$('fb2').textContent=last?'Kembali ke daftar chapter':'Lanjutkan ke chapter selanjutnya';$('fb2').onclick=()=>last?startGame():startChapter(C+1);$('fb3').onclick=()=>startChapter(C);
+const M=pct>=.85?['Luar biasa! Kamu benar-benar Penjaga Bumi sejati!','Kakek bangga sekali padamu. Pertahankan semangatmu, Nak!']:pct>=.6?['Bagus sekali! Sedikit lagi sempurna. Terus semangat ya!','Kamu sudah paham banyak hal. Teliti lagi di bagian hitungan ya.']:pct>=.35?['Tidak apa-apa, Nak. Setiap kesalahan adalah langkah menuju paham. Yuk terus belajar!','Perhatikan ceritanya baik-baik, petunjuk jawabannya ada di sana.']:['Jangan menyerah! Bumi saja butuh waktu untuk pulih, kamu pun boleh belajar pelan-pelan.','Kakek percaya kamu bisa. Kita jalan bersama lagi ya!'];
+$('ft').innerHTML=`<div class="stars">${[0,1,2].map(i=>`<span style="animation-delay:${4.5+i*.5}s" class="${i<st?'on':''}">★</span>`).join('')}</div><h2>${CH[C].n} selesai!</h2><p class="kk">🧓 Kakek: "${rnd(M)}"</p>`;
+$('fb2').textContent='Lanjutkan ke Chapter Selanjutnya →';$('fb2').classList.toggle('hidden',last);$('fb2').onclick=()=>{if(!last&&mode==='end')startChapter(C+1)};$('fb3').textContent='🏠 Kembali ke Lobby';$('fb3').onclick=()=>{document.body.classList.remove('ending');mode='menu';stopSpeech();$('fade').classList.remove('on');showScreen('home')};
+const bar=$('fb2').parentElement;bar.classList.add('endbar');let sb=$('endScore');if(!sb){sb=document.createElement('div');sb.id='endScore';bar.prepend(sb)}sb.innerHTML=`<b>⭐ Skor ${score} / ${tot}</b><small>Benar percobaan pertama: ${firstOk} dari ${qt}</small>`;
+document.body.classList.add('ending');const eb=[$('fb2'),$('fb3')];eb.forEach(b=>b.disabled=true);setTimeout(()=>{if(mode==='end')eb.forEach(b=>b.disabled=false)},5200);
 $('fade').classList.add('on');[523,659,784,1047].forEach((f,i)=>tone(f,.5,'triangle',.1,i*.18));if(pct>=.6)burst(true)}
 const LOC={home:'Rumah Rani',street:'Gang Kampung',tps:'Tempat Pengepul Bu Marni',market:'Pasar Desa',work:'Bengkel Kakek',park:'Taman Desa'};
 function pop(x,y,t,c){parts.push({x,y,vx:0,vy:-45,l:1.4,m:1.4,t,c})}
 function sparkle(x,y){for(let i=0;i<16;i++){const a=Math.random()*6.28,v=60+Math.random()*130;parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-50,l:.95,m:.95,t:'✦',c:rnd(['#ffe36b','#8df0ae','#fff'])})}}
 function puff(x,y){parts.push({x,y,vx:-70,vy:-14,l:.55,m:.55,r:6,c:'rgba(255,255,255,.65)'})}
-function previousDialogue(){if(!lastDialogue)return;stopSpeech();dialogueQueue=[];scene=lastDialogue.scene;showStory(lastDialogue.text,lastDialogue.who,lastDialogue.scene,lastDialogue.action);typed=txt.length;wait=0}
+function previousDialogue(){if(!lastDialogue||mode==='end')return;stopSpeech();dialogueQueue=[];scene=lastDialogue.scene;showStory(lastDialogue.text,lastDialogue.who,lastDialogue.scene,lastDialogue.action);typed=txt.length;wait=0}
 function quitGame(){mode='menu';stopSpeech();startGame()}
 $('box').onclick=()=>{if(mode!=='story')return;if(typed<txt.length)typed=txt.length;else next()};
 /* ---- gambar ---- */
@@ -303,3 +305,14 @@ document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-bg.show').forEach(m=>m.classList.remove('show'))});
 init();applyS();
 startBgm();['pointerdown','keydown','touchstart'].forEach(e=>addEventListener(e,()=>startBgm(),{once:true}));
+
+(function(){const st=document.createElement('style');st.textContent=`
+#fade{padding-bottom:96px}
+#fade .endbar{position:absolute;left:0;right:0;bottom:0;margin:0;padding:12px 16px;background:var(--deep);border-top:2px solid var(--line2);display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+#fade .endbar #endScore{display:flex;flex-direction:column;text-align:left;color:#fff;font-weight:900;font-size:1.15rem;line-height:1.3}
+#fade .endbar #endScore small{font-size:.78rem;font-weight:700;color:#bfd5ce}
+#fade .endbar .btnrow,#fade .endbar button{margin:0}
+#fade .endbar button:disabled{opacity:.35}
+body.ending .game-bottom-actions{pointer-events:none;opacity:.35}
+@media(max-width:560px){#fade .endbar{flex-direction:column;align-items:stretch;text-align:center}#fade .endbar #endScore{text-align:center}#fade .endbar button{width:100%}}
+`;document.head.appendChild(st)})();

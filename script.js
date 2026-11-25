@@ -172,18 +172,21 @@ const rnd=a=>a[Math.floor(Math.random()*a.length)];
 /* ---- suara sintetis (tanpa file) ---- */
 let AC;function ac(){if(!AC)try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}if(AC&&AC.state==='suspended')AC.resume();return AC}
 function tone(f,d,ty,v,t0,f2){if(!S.sfx)return;const a=ac();if(!a)return;const o=a.createOscillator(),n=a.createGain(),t=a.currentTime+(t0||0);o.type=ty||'sine';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);n.gain.setValueAtTime(v||.1,t);n.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(n);n.connect(a.destination);o.start(t);o.stop(t+d)}
-function stepSnd(){if(!S.sfx)return;const a=ac();if(!a)return;const L=a.sampleRate*.06,b=a.createBuffer(1,L,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<L;i++)d[i]=(Math.random()*2-1)*(1-i/L);const s=a.createBufferSource(),n=a.createGain(),f=a.createBiquadFilter();f.type='lowpass';f.frequency.value=600;n.gain.value=.2;s.buffer=b;s.connect(f);f.connect(n);n.connect(a.destination);s.start()}
+function stepSnd(){if(!S.sfx||speaking)return;const a=ac();if(!a)return;const L=a.sampleRate*.06,b=a.createBuffer(1,L,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<L;i++)d[i]=(Math.random()*2-1)*(1-i/L);const s=a.createBufferSource(),n=a.createGain(),f=a.createBiquadFilter();f.type='lowpass';f.frequency.value=600;n.gain.value=.07;s.buffer=b;s.connect(f);f.connect(n);n.connect(a.destination);s.start()}
 const laughS=()=>[0,.17,.34,.51].forEach((t,i)=>tone(560-i*45,.14,'square',.06,t,400-i*30));
-const bird=()=>{tone(2300,.08,'sine',.04,0,3100);tone(2700,.08,'sine',.04,.12,3400)};
-const whoosh=()=>tone(250,.5,'sawtooth',.03,0,1400);
+const bird=()=>{if(speaking)return;tone(2300,.08,'sine',.04,0,3100);tone(2700,.08,'sine',.04,.12,3400)};
+const whoosh=()=>tone(250,.5,'sawtooth',.015,0,1400);
 function sfx2(ok){const a=SFX[ok?'good':'bad'];if(a&&!a.broken)sfx(ok?'good':'bad');else ok?[660,880,1320].forEach((f,i)=>tone(f,.25,'triangle',.1,i*.09)):tone(220,.5,'sawtooth',.08,0,110)}
 /* ---- suara narator & dialog (Text-to-Speech peramban) ---- */
 function stopSpeech(){speaking=false;cu=null;try{speechSynthesis.cancel()}catch(e){}}
-function speak(t,w){speaking=false;try{if(!S.voice||!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='id-ID';u.rate=w==='n'?.95:1.05;u.pitch={n:1,bima:1.9,kakek:.72,rani:1.25}[w]||1;cu=u;speaking=true;u.onend=u.onerror=()=>{if(cu===u)speaking=false};setTimeout(()=>{if(cu===u)speaking=false},30000);speechSynthesis.speak(u)}catch(e){speaking=false}}
+let IDV=null;function pickVoice(){try{const v=speechSynthesis.getVoices();IDV=v.find(x=>/^id([-_]|$)/i.test(x.lang))||v.find(x=>/indones/i.test(x.name))||null}catch(e){}}
+try{pickVoice();speechSynthesis.addEventListener('voiceschanged',pickVoice)}catch(e){}
+function cleanSpeech(t){return String(t).replace(/<[^>]*>/g,' ').replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu,'').replace(/×|\*/g,' kali ').replace(/=/g,' sama dengan ').replace(/\+/g,' tambah ').replace(/−|\s-\s/g,' kurang ').replace(/\bkg\b/gi,' kilogram ').replace(/\s+/g,' ').trim()}
+function speak(t,w){speaking=false;try{if(!S.voice||!window.speechSynthesis)return;speechSynthesis.cancel();const clean=cleanSpeech(t);if(!clean)return;const u=new SpeechSynthesisUtterance(clean);u.lang='id-ID';if(IDV)u.voice=IDV;u.rate=w==='n'?.92:.97;u.pitch={n:1,bima:1.45,kakek:.8,rani:1.15}[w]||1;u.volume=1;cu=u;speaking=true;u.onend=u.onerror=()=>{if(cu===u)speaking=false};setTimeout(()=>{if(cu===u)speaking=false},30000);speechSynthesis.speak(u)}catch(e){speaking=false}}
 function say(who,t,d){bub={who,t:d||3.5,text:t};speak(t,who)}
 /* ---- alur game ---- */
 function startGame(){$('chList').innerHTML=CH.map((c,i)=>`<button class="menu-btn" ${i>prog?'disabled':''} onclick="startChapter(${i})"><span>${['🏘️','♻️','🌍'][i]}</span>${c.n}<small>${i>prog?'🔒 Selesaikan chapter sebelumnya terlebih dahulu':c.d}</small></button>`).join('');showScreen('chapters')}
-function startChapter(i){document.body.classList.remove('ending');ac();C=i;steps=CH[i].steps;si=0;storyHistory=[];dialogueQueue=[];pose='walk';score=0;streak=0;firstOk=0;parts=[];banner=null;qn=0;qt=steps.filter(s=>typeof s!=='string').length;scene='home';bub=null;ox=0;
+function startChapter(i){clearTimeout(autoT);document.body.classList.remove('ending');ac();C=i;steps=CH[i].steps;si=0;storyHistory=[];dialogueQueue=[];pose='walk';score=0;streak=0;firstOk=0;parts=[];banner=null;qn=0;qt=steps.filter(s=>typeof s!=='string').length;scene='home';bub=null;ox=0;
 $('actionCaption').textContent='Mereka bersiap memulai perjalanan.';$('playingAs').textContent=player+' '+avatar;$('qTitle').textContent=CH[i].n;$('score').textContent=0;$('fade').classList.remove('on');showScreen('game');next()}
 function showStory(text,who='narrator',sceneKey=scene,action='walk'){
  txt=text;typed=0;wait=0;mode='story';pose=action;poseUntil=performance.now()+3600;lastDialogue={text,who,scene:sceneKey,action};
@@ -210,17 +213,19 @@ function next(){
   $('qp').innerHTML='<div class="question-box idle">💬 Dengarkan percakapan mereka. Ketuk teks untuk melanjutkan.</div>';
  } else ask(s)
 }
-function ask(s){$('prevDialogueBtn').disabled=true;mode='q';cq=s;tried=false;wrongCount=0;qn++;$('qTag').textContent=`SOAL ${qn} / ${qt}`;$('box').textContent='⏸ Perjalanan berhenti. Jawab pertanyaan di bawah untuk melanjutkan.';
-$('qp').innerHTML=`<div class="question-box"><span class="tag">${s[4]?'🧮 SOAL SPLDV':'💡 PEMAHAMAN'}</span><h3>${s[0]}</h3></div><div class="answers">${s[1].map((o,i)=>`<button class="answer" onclick="ans(${i},this)"><span class="ab">${String.fromCharCode(65+i)}</span><span>${o}</span></button>`).join('')}</div><div class="feedback" id="feedback">Pilih satu jawaban yang menurutmu benar.</div><div class="actions"><button class="btn-main hidden" id="nextBtn" onclick="next()">LANJUTKAN PERJALANAN →</button></div>`;
+function ask(s){$('prevDialogueBtn').disabled=true;mode='q';cq=s;tried=false;wrongCount=0;qn++;$('qTag').textContent=`SOAL ${qn} / ${qt}`;$('box').textContent='⏸ Perjalanan berhenti. Jawab pertanyaan di bawah.';
+$('qp').innerHTML=`<div class="question-box"><span class="tag">${s[4]?'🧮 SOAL SPLDV':'💡 PEMAHAMAN'}</span><h3>${s[0]}</h3></div><div class="answers">${s[1].map((o,i)=>`<button class="answer" onclick="ans(${i},this)"><span class="ab">${String.fromCharCode(65+i)}</span><span>${o}</span></button>`).join('')}</div><div class="feedback" id="feedback">Pilih satu jawaban yang menurutmu benar.</div>`;
 $('qp').scrollIntoView({behavior:'smooth',block:'nearest'})}
+let autoT=0;
 function ans(i,b){if(mode!=='q')return;const q=cq,all=document.querySelectorAll('.answer');
 if(i===q[2]){mode='a';const pt=tried?5:10;score+=pt;if(tried)streak=0;else{streak++;firstOk++}all.forEach(x=>x.disabled=true);b.classList.add('good');
 $('feedback').innerHTML=`<b style="color:#8df0ae">BENAR! +${pt} POIN</b><br>`+q[3];
-sfx2(true);burst(true);say('kakek',rnd(ANSWER_LINES),2.8);pop(480,FY-205,'+'+pt,'#ffe36b');sparkle(480,FY-110);$('nextBtn').classList.remove('hidden')}
-else{tried=true;wrongCount++;streak=0;b.disabled=true;b.classList.add('bad');sfx2(false);burst(false);laughS();
+sfx2(true);burst(true);setTimeout(()=>{if(mode==='a')say('kakek',rnd(ANSWER_LINES),2.8)},800);pop(480,FY-205,'+'+pt,'#ffe36b');sparkle(480,FY-110);
+clearTimeout(autoT);const rd=Math.min(10000,Math.max(4500,3500+(q[3]||'').length*40));autoT=setTimeout(function w(){if(mode!=='a')return;if(speaking||bub){autoT=setTimeout(w,400);return}next()},rd)}
+else{tried=true;wrongCount++;streak=0;b.disabled=true;b.classList.add('bad');sfx2(false);burst(false);setTimeout(()=>{if(mode==='q')laughS()},550);
 const tease=wrongCount>=2?'Hahaha! Sudah dua kali masih salah juga? Ayo, coba pikirkan baik-baik sebelum memilih!':'Hehehe! Wah, jawabanmu belum tepat. Coba lagi, jangan asal pilih!';
 $('feedback').innerHTML=`<b style="color:#ffb3a8">BELUM TEPAT</b><br><b style="color:#ffd27a">Bima: “${tease}”</b><br>Kakek: “Coba perhatikan petunjuk ini.”<br>${q[3]}<br><small>Kamu masih bisa memilih jawaban lain. Jawaban benar setelah mencoba lebih dari sekali mendapat 5 poin.</small>`;
- say('bima',tease,3.5);setTimeout(()=>{if(mode==='q')say('kakek','Coba perhatikan petunjuknya. '+q[3],6)},1900)}
+ setTimeout(()=>{if(mode!=='q')return;say('bima',tease,3.5);const iv=setInterval(()=>{if(mode!=='q'){clearInterval(iv);return}if(!speaking&&!bub){clearInterval(iv);say('kakek','Coba perhatikan petunjuknya. '+q[3],6)}},400)},1300)}
 $('score').textContent=score}
 function endCh(){mode='end';stopSpeech();const last=C===CH.length-1,tot=qt*10,pct=score/tot,st=pct>=.85?3:pct>=.6?2:1;
 if(C+1>prog&&!last){prog=C+1;try{localStorage.ecoProg=prog}catch(e){}}
@@ -235,7 +240,7 @@ function pop(x,y,t,c){parts.push({x,y,vx:0,vy:-45,l:1.4,m:1.4,t,c})}
 function sparkle(x,y){for(let i=0;i<16;i++){const a=Math.random()*6.28,v=60+Math.random()*130;parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-50,l:.95,m:.95,t:'✦',c:rnd(['#ffe36b','#8df0ae','#fff'])})}}
 function puff(x,y){parts.push({x,y,vx:-70,vy:-14,l:.55,m:.55,r:6,c:'rgba(255,255,255,.65)'})}
 function previousDialogue(){if(!lastDialogue||mode==='end')return;stopSpeech();dialogueQueue=[];scene=lastDialogue.scene;showStory(lastDialogue.text,lastDialogue.who,lastDialogue.scene,lastDialogue.action);typed=txt.length;wait=0}
-function quitGame(){mode='menu';stopSpeech();startGame()}
+function quitGame(){clearTimeout(autoT);mode='menu';stopSpeech();startGame()}
 $('box').onclick=()=>{if(mode!=='story')return;if(typed<txt.length)typed=txt.length;else next()};
 /* ---- gambar ---- */
 const PAL={home:['#7fd0f2','#fff1c9','#7dbb62','#e6d3a3'],street:['#9ccfe8','#f2ecd5','#8fb46f','#bdb59a'],tps:['#c9c3a8','#efe6c8','#968f6c','#a89f7e'],market:['#f6c97a','#fde9bd','#b9a461','#d9c38b'],work:['#b8dcc0','#eef5de','#86b26e','#cdbf99'],park:['#f08a5d','#ffd29a','#6fae6a','#c7b98a']};
@@ -316,3 +321,16 @@ startBgm();['pointerdown','keydown','touchstart'].forEach(e=>addEventListener(e,
 body.ending .game-bottom-actions{pointer-events:none;opacity:.35}
 @media(max-width:560px){#fade .endbar{flex-direction:column;align-items:stretch;text-align:center}#fade .endbar #endScore{text-align:center}#fade .endbar button{width:100%}}
 `;document.head.appendChild(st)})();
+
+(function(){const st=document.createElement('style');st.textContent=`
+.hero .planet{--s:min(88vw,380px);width:var(--s);height:var(--s);max-width:100%;margin:0 auto;flex:none;aspect-ratio:1/1}
+.hero .heart{width:76%;height:76%;aspect-ratio:1/1}
+.hero .earth{font-size:calc(var(--s)*.42);display:block;text-align:center;line-height:1}
+.hero .float{font-size:calc(var(--s)*.085);line-height:1;width:1em;height:1em;display:grid;place-items:center}
+.hero h1{overflow-wrap:anywhere}
+@media(max-width:380px){.hero .planet{--s:86vw}}
+`;document.head.appendChild(st);
+document.querySelectorAll('#how li').forEach(li=>{const t=li.textContent;
+ if(t.includes('Lanjutkan Perjalanan'))li.innerHTML='Setelah jawaban benar, penjelasan tampil sebentar lalu cerita <b>lanjut otomatis</b> ke bagian atau soal berikutnya.';
+ else if(t.includes('Ulangi Chapter')||t.includes('Jika Chapter 3 selesai'))li.remove();
+ else if(t.includes('Tekan Lanjutkan ke Chapter Selanjutnya')){li.insertAdjacentHTML('afterend','<li>Tekan <b>Kembali ke Lobby</b> untuk kembali ke Lobby. Pada Chapter 3 hanya tersedia tombol Lobby.</li>')}})})();

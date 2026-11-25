@@ -179,10 +179,25 @@ const whoosh=()=>tone(250,.5,'sawtooth',.015,0,1400);
 function sfx2(ok){const a=SFX[ok?'good':'bad'];if(a&&!a.broken)sfx(ok?'good':'bad');else ok?[660,880,1320].forEach((f,i)=>tone(f,.25,'triangle',.1,i*.09)):tone(220,.5,'sawtooth',.08,0,110)}
 /* ---- suara narator & dialog (Text-to-Speech peramban) ---- */
 function stopSpeech(){speaking=false;cu=null;try{speechSynthesis.cancel()}catch(e){}}
-let IDV=null;function pickVoice(){try{const v=speechSynthesis.getVoices();IDV=v.find(x=>/^id([-_]|$)/i.test(x.lang))||v.find(x=>/indones/i.test(x.name))||null}catch(e){}}
+let IDVS=[];function pickVoice(){try{IDVS=speechSynthesis.getVoices().filter(x=>/^id([-_]|$)/i.test(x.lang)||/indones/i.test(x.name))}catch(e){}}
 try{pickVoice();speechSynthesis.addEventListener('voiceschanged',pickVoice)}catch(e){}
-function cleanSpeech(t){return String(t).replace(/<[^>]*>/g,' ').replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu,'').replace(/×|\*/g,' kali ').replace(/=/g,' sama dengan ').replace(/\+/g,' tambah ').replace(/−|\s-\s/g,' kurang ').replace(/\bkg\b/gi,' kilogram ').replace(/\s+/g,' ').trim()}
-function speak(t,w){speaking=false;try{if(!S.voice||!window.speechSynthesis)return;speechSynthesis.cancel();const clean=cleanSpeech(t);if(!clean)return;const u=new SpeechSynthesisUtterance(clean);u.lang='id-ID';if(IDV)u.voice=IDV;u.rate=w==='n'?.92:.97;u.pitch={n:1,bima:1.45,kakek:.8,rani:1.15}[w]||1;u.volume=1;cu=u;speaking=true;u.onend=u.onerror=()=>{if(cu===u)speaking=false};setTimeout(()=>{if(cu===u)speaking=false},30000);speechSynthesis.speak(u)}catch(e){speaking=false}}
+/* tiap tokoh dapat suara sendiri; kalau HP hanya punya 1 suara Indonesia, dibedakan lewat nada & kecepatan */
+const VP={n:{rate:.93,pitch:1},rani:{rate:1,pitch:1.18},bima:{rate:1.08,pitch:1.4},kakek:{rate:.84,pitch:.72}};
+function voiceFor(w){if(!IDVS.length)return null;if(IDVS.length===1)return IDVS[0];
+ const fem=/female|perempuan|wanita|damayanti|gadis|\bayu\b|siti|putri/i,F=IDVS.filter(v=>fem.test(v.name)),M=IDVS.filter(v=>!fem.test(v.name)&&/male|laki|pria|andika|bayu|budi/i.test(v.name));
+ if(w==='rani')return F[0]||IDVS[0];if(w==='kakek')return M[0]||IDVS[IDVS.length-1];if(w==='bima')return M[1]||M[0]||IDVS[Math.min(1,IDVS.length-1)];return F[1]||F[0]||IDVS[0]}
+function cleanSpeech(t){return String(t).replace(/<[^>]*>/g,' ').replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu,'').replace(/\b(?:ha){2,}h?\b|\b(?:he){2,}h?\b|\b(?:hi){2,}h?\b/gi,'').replace(/×|\*/g,' kali ').replace(/=/g,' sama dengan ').replace(/\+/g,' tambah ').replace(/−|\s-\s/g,' kurang ').replace(/\bkg\b/gi,' kilogram ').replace(/\s+/g,' ').replace(/^[\s!?.,]+/,'').trim()}
+/* dibacakan per kalimat/anak kalimat dengan jeda & variasi tipis supaya tidak terdengar datar seperti robot */
+function speak(t,w){speaking=false;try{if(!S.voice||!window.speechSynthesis)return;speechSynthesis.cancel();const clean=cleanSpeech(t);if(!clean)return;
+ const raw=clean.match(/[^.!?…;:,]+[.!?…;:,]*/g)||[clean],ch=[];raw.forEach(p=>{p=p.trim();if(!p||!/[a-z0-9]/i.test(p))return;if(ch.length&&ch[ch.length-1].length<14)ch[ch.length-1]+=' '+p;else ch.push(p)});
+ const P=VP[w]||VP.n,dist=IDVS.length>=2,me={};cu=me;speaking=true;let i=0;
+ const go=()=>{if(cu!==me)return;if(i>=ch.length){speaking=false;return}
+  const tx=ch[i++],u=new SpeechSynthesisUtterance(tx);u.lang='id-ID';const v=voiceFor(w);if(v)u.voice=v;
+  const bp=dist?1+(P.pitch-1)*.5:P.pitch;u.rate=Math.max(.6,P.rate*(.95+Math.random()*.1));
+  u.pitch=Math.min(2,Math.max(.1,bp*(.97+Math.random()*.06)+(/\?$/.test(tx)?.1:0)+(/!$/.test(tx)?.06:0)));u.volume=1;
+  let adv=false;const nx=()=>{if(adv)return;adv=true;if(cu!==me)return;setTimeout(go,/[.!?…]$/.test(tx)?200:70)};
+  u.onend=nx;u.onerror=()=>{if(cu===me)speaking=false};setTimeout(nx,tx.length*95+3000);speechSynthesis.speak(u)};
+ go();setTimeout(()=>{if(cu===me)speaking=false},45000)}catch(e){speaking=false}}
 function say(who,t,d){bub={who,t:d||3.5,text:t};speak(t,who)}
 /* ---- alur game ---- */
 function startGame(){$('chList').innerHTML=CH.map((c,i)=>`<button class="menu-btn" ${i>prog?'disabled':''} onclick="startChapter(${i})"><span>${['🏘️','♻️','🌍'][i]}</span>${c.n}<small>${i>prog?'🔒 Selesaikan chapter sebelumnya terlebih dahulu':c.d}</small></button>`).join('');showScreen('chapters')}
@@ -334,3 +349,11 @@ document.querySelectorAll('#how li').forEach(li=>{const t=li.textContent;
  if(t.includes('Lanjutkan Perjalanan'))li.innerHTML='Setelah jawaban benar, penjelasan tampil sebentar lalu cerita <b>lanjut otomatis</b> ke bagian atau soal berikutnya.';
  else if(t.includes('Ulangi Chapter')||t.includes('Jika Chapter 3 selesai'))li.remove();
  else if(t.includes('Tekan Lanjutkan ke Chapter Selanjutnya')){li.insertAdjacentHTML('afterend','<li>Tekan <b>Kembali ke Lobby</b> untuk kembali ke Lobby. Pada Chapter 3 hanya tersedia tombol Lobby.</li>')}})})();
+
+(function(){const st=document.createElement('style');st.textContent=`
+.hero .planet{--s:min(78vw,300px);width:var(--s);height:var(--s);margin:0 auto}
+.hero .heart{width:62%;height:62%;position:absolute;left:19%;top:19%;z-index:1}
+.hero .earth{font-size:calc(var(--s)*.34)}
+.hero .float{z-index:2;font-size:calc(var(--s)*.085)}
+`;document.head.appendChild(st);
+const fl=document.querySelectorAll('.hero .float');fl.forEach((e,i)=>{const a=(-90+i*360/fl.length)*Math.PI/180;e.style.left=`calc(${50+45*Math.cos(a)}% - .5em)`;e.style.top=`calc(${50+45*Math.sin(a)}% - .5em)`})})();

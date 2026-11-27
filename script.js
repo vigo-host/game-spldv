@@ -1,5 +1,5 @@
 /* ===== PENGATURAN DEVELOPER (ubah di sini, pengguna lain tidak bisa mengedit) ===== */
-const DEV = {group:'Kelompok 4', members:['Muhamad Rafii Al-AaFi (17)','Muhammad Ginanjar Rizqi (18)','Muthia Azahra (22)','Nafis Syafiya Fidiarti (23)']};
+const DEV = {group:'Kelompok 5', members:['Muhamad Rafii Al-AaFi (17)','Muhammad Ginanjar Rizqi (18)','Muthia Azahra (22)','Nafis Syafiya Fidiarti (23)']};
 /* ===== FILE AUDIO: semua file ada di folder "audio" (sejajar dengan index.html) =====
    good = suara jawaban BENAR (cling) | bad = suara jawaban SALAH (tetot)
    bgm  = 3 musik latar, diputar bergantian (1 -> 2 -> 3 -> ulang)
